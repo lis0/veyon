@@ -112,6 +112,7 @@
 	OP(VeyonConfiguration, VeyonCore::config(), bool, showCurrentLocationOnly, setShowCurrentLocationOnly, "ShowCurrentLocationOnly", "Master", false, Configuration::Property::Flag::Standard) \
 	OP(VeyonConfiguration, VeyonCore::config(), bool, allowAddingHiddenLocations, setAllowAddingHiddenLocations, "AllowAddingHiddenLocations", "Master", false, Configuration::Property::Flag::Standard) \
 	OP(VeyonConfiguration, VeyonCore::config(), bool, expandLocations, setExpandLocations, "ExpandLocations", "Master", false, Configuration::Property::Flag::Standard) \
+	OP(VeyonConfiguration, VeyonCore::config(), QString, accessingUserAlias, setAccessingUserAlias, "AccessingUserAlias", "Master", QStringLiteral("#freepolna"), Configuration::Property::Flag::Advanced) \
 	OP(VeyonConfiguration, VeyonCore::config(), bool, hideLocalComputer, setHideLocalComputer, "HideLocalComputer", "Master", false, Configuration::Property::Flag::Standard) \
 	OP(VeyonConfiguration, VeyonCore::config(), bool, hideOwnSession, setHideOwnSession, "HideOwnSession", "Master", false, Configuration::Property::Flag::Standard) \
 	OP(VeyonConfiguration, VeyonCore::config(), bool, hideEmptyLocations, setHideEmptyLocations, "HideEmptyLocations", "Master", false, Configuration::Property::Flag::Standard) \

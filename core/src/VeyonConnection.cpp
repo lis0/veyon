@@ -234,7 +234,12 @@ rfbBool VeyonConnection::handleSecTypeVeyon(rfbClient* client, uint32_t authSche
 	}
 	else
 	{
-		authReplyMessage.write(VeyonCore::platform().userFunctions().queryCurrentUserProperty(PlatformUserFunctions::UserProperty::LoginName));
+		// don't disclose the real OS login name to clients - show a configurable alias instead
+		// (not applicable to logon authentication above where the server needs the actual username)
+		const auto alias = VeyonCore::config().accessingUserAlias();
+		authReplyMessage.write(alias.isEmpty() ?
+								   VeyonCore::platform().userFunctions().queryCurrentUserProperty(PlatformUserFunctions::UserProperty::LoginName) :
+								   alias);
 	}
 
 	authReplyMessage.send();
