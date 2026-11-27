@@ -108,7 +108,34 @@ void ComputerControlInterface::stop()
 	m_pingTimer.stop();
 	m_connectionWatchdogTimer.stop();
 
+	m_connectionSuspended = false;
 	m_state = State::Disconnected;
+}
+
+
+
+void ComputerControlInterface::suspendConnection()
+{
+	lock();
+	m_connectionSuspended = true;
+
+	if (vncConnection())
+	{
+		vncConnection()->stop();
+	}
+	unlock();
+}
+
+
+
+void ComputerControlInterface::startSuspended(State failureState)
+{
+	stop();
+
+	lock();
+	m_connectionSuspended = true;
+	m_state = failureState;
+	unlock();
 }
 
 
@@ -199,6 +226,7 @@ void ComputerControlInterface::setAccessControlFailed(const QString& details)
 	lock();
 	m_accessControlDetails = details;
 	m_state = State::AccessControlFailed;
+	m_connectionSuspended = true;
 
 	if (vncConnection())
 	{
@@ -460,6 +488,12 @@ void ComputerControlInterface::resetWatchdog()
 
 void ComputerControlInterface::restartConnection()
 {
+	if (m_connectionSuspended)
+	{
+		m_connectionWatchdogTimer.stop();
+		return;
+	}
+
 	if (vncConnection())
 	{
 		vDebug();
@@ -477,7 +511,10 @@ void ComputerControlInterface::updateState()
 
 	if (vncConnection())
 	{
-		if (!(m_state == State::AccessControlFailed && vncConnection()->state() == VncConnection::State::Disconnected))
+		const auto keepFailureState = m_state == State::AccessControlFailed ||
+			(m_connectionSuspended && m_state == State::AuthenticationFailed);
+
+		if (!(keepFailureState && vncConnection()->state() == VncConnection::State::Disconnected))
 		{
 			m_state = vncConnection()->state();
 		}

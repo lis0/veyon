@@ -37,6 +37,11 @@ public:
 
 	void reload();
 
+	/*!
+	 * \brief Forget about a previous authentication/access control failure and try to connect again
+	 */
+	void retryConnection(const ComputerControlInterface::Pointer& controlInterface);
+
 Q_SIGNALS:
 	void stateChanged(QModelIndex);
 	void activeFeaturesChanged(QModelIndex);
@@ -57,6 +62,10 @@ private:
 
 	void startComputerControlInterface(ComputerControlInterface* controlInterface);
 	void stopComputerControlInterface(const ComputerControlInterface::Pointer& controlInterface);
+
+	bool isComputerSuspended(const QString& hostName) const;
+	void setComputerSuspended(const QString& hostName, bool suspended);
+	void handleConnectionFailure(ComputerControlInterface* controlInterface);
 
 	double averageAspectRatio() const;
 
