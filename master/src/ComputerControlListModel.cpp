@@ -324,7 +324,16 @@ void ComputerControlListModel::updateSessionInfo(const QModelIndex& index)
 
 void ComputerControlListModel::startComputerControlInterface(ComputerControlInterface* controlInterface)
 {
-	controlInterface->start(computerScreenSize(), ComputerControlInterface::UpdateMode::Monitoring);
+	// do not try to connect to computers which failed to authenticate before - every attempt triggers
+	// a notification on the client; the user can retry manually via the context menu
+	if (isComputerSuspended(controlInterface->computer().hostName()))
+	{
+		controlInterface->startSuspended(ComputerControlInterface::State::AuthenticationFailed);
+	}
+	else
+	{
+		controlInterface->start(computerScreenSize(), ComputerControlInterface::UpdateMode::Monitoring);
+	}
 
 	connect(controlInterface, &ComputerControlInterface::framebufferSizeChanged,
 			this, &ComputerControlListModel::updateComputerScreenSize);
@@ -336,7 +345,10 @@ void ComputerControlListModel::startComputerControlInterface(ComputerControlInte
 			this, [=, this]() { updateActiveFeatures(interfaceIndex(controlInterface)); });
 
 	connect(controlInterface, &ComputerControlInterface::stateChanged,
-			this, [=, this]() { updateState(interfaceIndex(controlInterface)); });
+			this, [=, this]() {
+				handleConnectionFailure(controlInterface);
+				updateState(interfaceIndex(controlInterface));
+			});
 
 	connect(controlInterface, &ComputerControlInterface::userChanged,
 			this, [=, this]() { updateUser(interfaceIndex(controlInterface)); });
@@ -346,6 +358,96 @@ void ComputerControlListModel::startComputerControlInterface(ComputerControlInte
 
 	connect(controlInterface, &ComputerControlInterface::accessControlDetailsChanged,
 			this, [=, this]() { updateAccessControlDetails(interfaceIndex(controlInterface)); });
+}
+
+
+
+void ComputerControlListModel::retryConnection(const ComputerControlInterface::Pointer& controlInterface)
+{
+	if (controlInterface.isNull() || controlInterface->isConnectionSuspended() == false)
+	{
+		return;
+	}
+
+	setComputerSuspended(controlInterface->computer().hostName(), false);
+
+	controlInterface->start(computerScreenSize(), ComputerControlInterface::UpdateMode::Monitoring);
+
+	updateState(interfaceIndex(controlInterface.data()));
+}
+
+
+
+bool ComputerControlListModel::isComputerSuspended(const QString& hostName) const
+{
+	if (hostName.isEmpty())
+	{
+		return false;
+	}
+
+	const auto suspendedComputers = m_master->userConfig().suspendedComputers();
+	return suspendedComputers.contains(QJsonValue(hostName));
+}
+
+
+
+void ComputerControlListModel::setComputerSuspended(const QString& hostName, bool suspended)
+{
+	auto suspendedComputers = m_master->userConfig().suspendedComputers();
+
+	for (int i = 0; i < suspendedComputers.size(); ++i)
+	{
+		if (suspendedComputers[i].toString() == hostName)
+		{
+			if (suspended == false)
+			{
+				suspendedComputers.removeAt(i);
+				m_master->userConfig().setSuspendedComputers(suspendedComputers);
+			}
+			return;
+		}
+	}
+
+	if (suspended)
+	{
+		suspendedComputers.append(hostName);
+		m_master->userConfig().setSuspendedComputers(suspendedComputers);
+	}
+}
+
+
+
+void ComputerControlListModel::handleConnectionFailure(ComputerControlInterface* controlInterface)
+{
+	const auto hostName = controlInterface->computer().hostName();
+	if (hostName.isEmpty())
+	{
+		return;
+	}
+
+	switch (controlInterface->state())
+	{
+	case ComputerControlInterface::State::AuthenticationFailed:
+		if (controlInterface->isConnectionSuspended() == false)
+		{
+			vInfo() << "authentication failed for" << hostName << "- suspending further connection attempts";
+			setComputerSuspended(hostName, true);
+			controlInterface->suspendConnection();
+		}
+		break;
+
+	case ComputerControlInterface::State::AccessControlFailed:
+		// connection is already stopped by the interface itself
+		setComputerSuspended(hostName, true);
+		break;
+
+	case ComputerControlInterface::State::Connected:
+		setComputerSuspended(hostName, false);
+		break;
+
+	default:
+		break;
+	}
 }
 
 
@@ -456,7 +558,12 @@ QString ComputerControlListModel::computerToolTipRole(const ComputerControlInter
 
 	if (controlInterface->state() != ComputerControlInterface::State::Connected)
 	{
-		return QStringLiteral("<b>%1</b><br>%2<br>%3<br>%4").arg(state, name, location, host);
+		auto toolTip = QStringLiteral("<b>%1</b><br>%2<br>%3<br>%4").arg(state, name, location, host);
+		if (controlInterface->isConnectionSuspended())
+		{
+			toolTip += QStringLiteral("<br><i>%1</i>").arg(tr("Connection attempts suspended - use \"Retry connection\" in the context menu"));
+		}
+		return toolTip;
 	}
 
 	return QStringLiteral("<b>%1</b><br>%2<br>%3<br>%4<br>%5<br>%6").arg(state, name, location, host, features, user);

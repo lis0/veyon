@@ -562,6 +562,20 @@
             </item>
            </layout>
           </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="accessingUserAliasLabel">
+            <property name="text">
+             <string>Accessing user alias shown to clients</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="accessingUserAlias">
+            <property name="toolTip">
+             <string>If set, this name is sent to clients instead of the real login name when a computer is being accessed with key-based authentication. Clients still display this alias in their "remote access" notifications and logs. Leave empty to disclose the real login name.</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
@@ -847,6 +861,7 @@
   <tabstop>guestUserValue</tabstop>
   <tabstop>guestUserIdentityExtensionType</tabstop>
   <tabstop>guestUserIdentityExtensionValue</tabstop>
+  <tabstop>accessingUserAlias</tabstop>
   <tabstop>accessControlForMasterEnabled</tabstop>
   <tabstop>autoSelectCurrentLocation</tabstop>
   <tabstop>autoAdjustMonitoringIconSize</tabstop>

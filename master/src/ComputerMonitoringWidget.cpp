@@ -157,7 +157,29 @@ void ComputerMonitoringWidget::alignComputers()
 
 void ComputerMonitoringWidget::showContextMenu(QPoint globalPos)
 {
-	populateFeatureMenu(selectedComputerControlInterfaces());
+	const auto selectedInterfaces = selectedComputerControlInterfaces();
+
+	populateFeatureMenu(selectedInterfaces);
+
+	ComputerControlInterfaceList suspendedInterfaces;
+	for (const auto& controlInterface : selectedInterfaces)
+	{
+		if (controlInterface && controlInterface->isConnectionSuspended())
+		{
+			suspendedInterfaces.append(controlInterface);
+		}
+	}
+
+	if (suspendedInterfaces.isEmpty() == false)
+	{
+		m_featureMenu->addSeparator();
+		m_featureMenu->addAction(tr("Retry connection"), this, [=, this]() {
+			for (const auto& controlInterface : suspendedInterfaces)
+			{
+				master()->computerControlListModel().retryConnection(controlInterface);
+			}
+		});
+	}
 
 	m_featureMenu->exec(globalPos);
 }

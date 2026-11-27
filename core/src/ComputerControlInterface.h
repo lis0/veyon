@@ -56,6 +56,21 @@ public:
 	void start(QSize scaledFramebufferSize = {}, UpdateMode updateMode = UpdateMode::Monitoring, AuthenticationProxy* authenticationProxy = nullptr);
 	void stop();
 
+	/*!
+	 * \brief Stop (re)connecting but keep the current failure state (authentication/access control failed)
+	 */
+	void suspendConnection();
+
+	/*!
+	 * \brief Do not connect at all but present the given failure state until start() is called again
+	 */
+	void startSuspended(State failureState);
+
+	bool isConnectionSuspended() const
+	{
+		return m_connectionSuspended;
+	}
+
 	const Computer& computer() const
 	{
 		return m_computer;
@@ -199,6 +214,7 @@ private:
 	Computer::NameSource m_computerNameSource{Computer::NameSource::Default};
 
 	State m_state{State::Disconnected};
+	bool m_connectionSuspended{false};
 	QString m_userLoginName{};
 	QString m_userFullName{};
 	PlatformSessionFunctions::SessionInfo m_sessionInfo{};

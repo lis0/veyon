@@ -31,6 +31,7 @@ public:
 	OP(UserConfig, VeyonMaster::userConfig(), bool, autoAdjustMonitoringIconSize, setAutoAdjustMonitoringIconSize, "AutoAdjustMonitoringIconSize", "UI", false, Configuration::Property::Flag::Standard) \
 	OP(UserConfig, VeyonMaster::userConfig(), int, slideshowDuration, setSlideshowDuration, "SlideshowDuration", "UI", SlideshowPanel::DefaultDuration, Configuration::Property::Flag::Standard) \
 	OP(UserConfig, VeyonMaster::userConfig(), bool, spotlightRealtime, setSpotlightRealtime, "SpotlightRealtime", "UI", true, Configuration::Property::Flag::Standard) \
+	OP(UserConfig, VeyonMaster::userConfig(), QJsonArray, suspendedComputers, setSuspendedComputers, "SuspendedComputers", "Authentication", QJsonArray(), Configuration::Property::Flag::Standard) \
 	OP(UserConfig, VeyonMaster::userConfig(), int, defaultRole, setDefaultRole, "DefaultRole", "Authentication", 0, Configuration::Property::Flag::Standard) \
 	OP(UserConfig, VeyonMaster::userConfig(), bool, toolButtonIconOnlyMode, setToolButtonIconOnlyMode, "ToolButtonIconOnlyMode", "UI", false, Configuration::Property::Flag::Standard) \
 	OP(UserConfig, VeyonMaster::userConfig(), bool, noToolTips, setNoToolTips, "NoToolTips", "UI", false, Configuration::Property::Flag::Standard) \
